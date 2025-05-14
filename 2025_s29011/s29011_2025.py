@@ -68,8 +68,6 @@ def calc_statistics(sequence: str) -> Stats:
     return Stats(length, counts_full, percentages, cg_at_ratio, cg_percent)
 
 
-
-
 # === ZAPIS FASTA ===
 # ORIGINAL:
 # def save_fasta(filename: Path, header: str, sequence: str, width: int = 80) -> None:
@@ -118,10 +116,14 @@ def main() -> None:
     except ValueError:
         sys.exit("BŁĄD: Długość musi być dodatnia!")
 
+
     # — ID sekwencji —
+    # ORIGINAL:
+    # seq_id = input("Podaj ID sekwencji: ").strip()
+    # MODIFIED (walidacja ID):
     seq_id = input("Podaj ID sekwencji: ").strip()
     if not re.fullmatch(r"[A-Za-z0-9_.-]+", seq_id):
-        sys.exit("BŁĄD: niedozwolone znaki w ID.")
+        sys.exit("niedozwolone znaki w ID")
 
     description = input("Podaj opis sekwencji: ").strip()
 
@@ -134,7 +136,6 @@ def main() -> None:
 
     # ORIGINAL:
     # final_seq = insert_signature(dna_seq, SIGNATURE)
-    # MODIFIED (podpis pobrany od użytkownika):
     final_seq = insert_signature(dna_seq, signature)
 
     # — zapis plików —
