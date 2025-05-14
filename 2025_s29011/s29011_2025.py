@@ -123,7 +123,7 @@ def main() -> None:
     description = input("Podaj opis sekwencji: ").strip()
 
     # — podpis użytkownika —
-    signature = input("Podaj imię (podpis): ").strip() or "Anon"
+    signature = input("Podaj imie ").strip()
 
     # — generowanie i statystyki (bez podpisu) —
     dna_seq = generate_random_dna(length)
