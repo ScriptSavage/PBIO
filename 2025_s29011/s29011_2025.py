@@ -19,7 +19,7 @@ import re                           # walidacja identyfikatora sekwencji
 
 
 DNA_ALPHABET = "ACGT"              # alfabet nukleotydów dla DNA
-
+MyName = "Maksymilian"
 # ORIGINAL:
 # def generate_random_dna(length: int) -> str:
 #     return "".join(random.choices(DNA_ALPHABET, k=length))
@@ -28,6 +28,13 @@ DNA_ALPHABET = "ACGT"              # alfabet nukleotydów dla DNA
 def generate_random_dna(length: int, *, rng: Optional[random.Random] = None) -> str:
     r = rng or random
     return "".join(r.choices(DNA_ALPHABET, k=length))
+
+
+def insert_signature(sequence: str, signature: str, *, rng: Optional[random.Random] = None) -> str:
+    """Zwraca sekwencję z wstawionym *signature* w losowym miejscu."""
+    r = rng or random
+    idx = r.randint(0, len(sequence))
+    return sequence[:idx] + signature + sequence[idx:]
 
 # Dataclass przechowywanie statystyk sekwencji
 @dataclass
@@ -121,9 +128,12 @@ def main() -> None:
     dna_seq = generate_random_dna(length)              # losowy łańcuch nukleotydów
     stats = calc_statistics(dna_seq)                   # obliczenia Counter‐based
 
+    # wstawiamy podpis do sekwencji zapisywanej w FASTA
+    final_seq = insert_signature(dna_seq, MyName)
+
     # -- zapis plików ---------------------------------------------------------
     fasta_path = Path(f"{seq_id}.fasta")               # nazwa pliku FASTA
-    save_fasta(fasta_path, f"{seq_id} {description}", dna_seq)  # zapis FASTA
+    save_fasta(fasta_path, f"{seq_id} {description}", final_seq)
 
     csv_path = Path(f"{seq_id}_stats.csv")            # nazwa pliku CSV
     save_stats_csv(stats, csv_path, seq_id)            # dopisanie wiersza
