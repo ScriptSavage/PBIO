@@ -41,7 +41,8 @@ class Stats:
     length: int                     # całkowita długość sekwencji (nt)
     counts: dict[str, int]          # ile razy występuje każdy nukleotyd
     percentages: dict[str, float]   # odsetek każdego nt w %
-    cg_at_ratio: Optional[float]    # (C+G)/(A+T) lub None jeśli A+T==0
+    cg_at_ratio: Optional[float]    # (C+G)/(A+T)
+    cg_percent: float
 
 
 # ORIGINAL:
@@ -55,16 +56,17 @@ class Stats:
 #     return {"length": length, "counts": counts, "percentages": percentages, "cg_at_ratio": cg_at_ratio}
 # MODIFIED (Counter + Stats: jedno przejście po sekwencji, szybszy i czytelniejszy wynik):
 def calc_statistics(sequence: str) -> Stats:
-    """Zwraca statystyki bazowe dla podanej sekwencji DNA."""
-    length = len(sequence)                              # długość sekwencji
-    counts = Counter(sequence)                          # liczenie wszystkich znaków
-    # tworzymy słownik z pelnym alfabetem – Counter zwraca 0 gdy klucza brak
-    counts_full = {n: counts[n] for n in DNA_ALPHABET}
+    """statystyki nukleotydowe dla sekwencji DNA"""
+    length = len(sequence)
+    counts = Counter(sequence)
+    counts_full = {n: counts.get(n, 0) for n in DNA_ALPHABET}
     percentages = {n: round(counts_full[n] / length * 100, 2) for n in DNA_ALPHABET}
-    at_sum = counts_full['A'] + counts_full['T']        # suma A+T
-    cg_sum = counts_full['C'] + counts_full['G']        # suma C+G
-    ratio = round(cg_sum / at_sum, 3) if at_sum else None
-    return Stats(length, counts_full, percentages, ratio)
+    cg_percent = round(percentages['C'] + percentages['G'], 2)
+    at_sum = counts_full['A'] + counts_full['T']
+    cg_sum = counts_full['C'] + counts_full['G']
+    cg_at_ratio = round(cg_sum / at_sum, 3) if at_sum else None
+    return Stats(length, counts_full, percentages, cg_at_ratio, cg_percent)
+
 
 
 
@@ -100,6 +102,7 @@ def save_stats_csv(stats: Stats, csv_path: Path, seq_id: str) -> None:
             seq_id,
             stats.length,
             stats.counts['A'], stats.counts['C'], stats.counts['G'], stats.counts['T'],
+            stats.cg_percent,
             stats.percentages['A'], stats.percentages['C'], stats.percentages['G'], stats.percentages['T'],
             stats.cg_at_ratio if stats.cg_at_ratio is not None else "NA",
         ])
@@ -141,13 +144,14 @@ def main() -> None:
     csv_path = Path(f"{seq_id}_stats.csv")
     save_stats_csv(stats, csv_path, seq_id)
 
-    # — podsumowanie —
-    print("\nFASTA →", fasta_path)
-    print("CSV   →", csv_path)
-    print("\nStatystyki sekwencji (bez podpisu):")
+    print("\nFASTA: ", fasta_path)
+    print("CSV: ", csv_path)
+    print("\nStatystyki sekwencji ")
     for n in DNA_ALPHABET:
-        print(f"  {n}: {stats.percentages[n]}% ({stats.counts[n]} nt)")
+        print(f"  {n}: {stats.percentages[n]}%")
+    print(f"  %CG: {stats.cg_percent}%")
     print("  Stosunek (C+G)/(A+T):", stats.cg_at_ratio if stats.cg_at_ratio is not None else "NA")
+
 
 if __name__ == "__main__":
     main()
