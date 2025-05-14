@@ -19,7 +19,6 @@ import re                           # walidacja identyfikatora sekwencji
 
 
 DNA_ALPHABET = "ACGT"              # alfabet nukleotydów dla DNA
-MyName = "Maksymilian"
 # ORIGINAL:
 # def generate_random_dna(length: int) -> str:
 #     return "".join(random.choices(DNA_ALPHABET, k=length))
@@ -105,8 +104,10 @@ def save_stats_csv(stats: Stats, csv_path: Path, seq_id: str) -> None:
             stats.cg_at_ratio if stats.cg_at_ratio is not None else "NA",
         ])
 
+
 def main() -> None:
     """Pobiera dane od użytkownika, generuje sekwencję, zapisuje FASTA i CSV."""
+    # — długość —
     try:
         length = int(input("Podaj długość sekwencji (liczba dodatnia): "))
         if length <= 0:
@@ -115,39 +116,38 @@ def main() -> None:
         sys.exit("BŁĄD: Długość musi być dodatnia!")
 
     # — ID sekwencji —
-    # ORIGINAL:
-    # seq_id = input("Podaj ID sekwencji: ").strip()
-    # MODIFIED (walidacja ID):
     seq_id = input("Podaj ID sekwencji: ").strip()
     if not re.fullmatch(r"[A-Za-z0-9_.-]+", seq_id):
-        sys.exit("ERROR: ID może zawierać tylko litery, cyfry, podkreślenia, kropki i myślniki.")
+        sys.exit("BŁĄD: niedozwolone znaki w ID.")
 
     description = input("Podaj opis sekwencji: ").strip()
 
-    # -- generowanie i statystyki --------------------------------------------
-    dna_seq = generate_random_dna(length)              # losowy łańcuch nukleotydów
-    stats = calc_statistics(dna_seq)                   # obliczenia Counter‐based
+    # — podpis użytkownika —
+    signature = input("Podaj imię (podpis): ").strip() or "Anon"
 
-    # wstawiamy podpis do sekwencji zapisywanej w FASTA
-    final_seq = insert_signature(dna_seq, MyName)
+    # — generowanie i statystyki (bez podpisu) —
+    dna_seq = generate_random_dna(length)
+    stats = calc_statistics(dna_seq)
 
-    # -- zapis plików ---------------------------------------------------------
-    fasta_path = Path(f"{seq_id}.fasta")               # nazwa pliku FASTA
+    # ORIGINAL:
+    # final_seq = insert_signature(dna_seq, SIGNATURE)
+    # MODIFIED (podpis pobrany od użytkownika):
+    final_seq = insert_signature(dna_seq, signature)
+
+    # — zapis plików —
+    fasta_path = Path(f"{seq_id}.fasta")
     save_fasta(fasta_path, f"{seq_id} {description}", final_seq)
 
-    csv_path = Path(f"{seq_id}_stats.csv")            # nazwa pliku CSV
-    save_stats_csv(stats, csv_path, seq_id)            # dopisanie wiersza
+    csv_path = Path(f"{seq_id}_stats.csv")
+    save_stats_csv(stats, csv_path, seq_id)
 
-    # -- finalny rezultat
-    print("\n⚙  Plik FASTA zapisano jako:", fasta_path)
-    print("Plik CSV  zapisano jako:", csv_path)
-    print("\nStatystyki sekwencji:")
-    for nuc in DNA_ALPHABET:
-        print(f"  {nuc}: {stats.percentages[nuc]}% ({stats.counts[nuc]} nt)")
-    if stats.cg_at_ratio is not None:
-        print(f"  Stosunek (C+G)/(A+T): {stats.cg_at_ratio}")
-    else:
-        print("  Nie można obliczyć stosunku – brak A i T w sekwencji.")
+    # — podsumowanie —
+    print("\nFASTA →", fasta_path)
+    print("CSV   →", csv_path)
+    print("\nStatystyki sekwencji (bez podpisu):")
+    for n in DNA_ALPHABET:
+        print(f"  {n}: {stats.percentages[n]}% ({stats.counts[n]} nt)")
+    print("  Stosunek (C+G)/(A+T):", stats.cg_at_ratio if stats.cg_at_ratio is not None else "NA")
 
 if __name__ == "__main__":
     main()
